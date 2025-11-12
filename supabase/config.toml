@@ -1,0 +1,10 @@
+project_id = "gwzeavggrkxokfmxddvs"
+
+[functions.login-vulnerable]
+verify_jwt = false
+
+[functions.login-secure]
+verify_jwt = false
+
+[functions.get-security-logs]
+verify_jwt = false
