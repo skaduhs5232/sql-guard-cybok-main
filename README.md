@@ -1,5 +1,8 @@
 # SQL Guard
 
+### Infografico
+![Imagem do WhatsApp de 2025-11-25 à(s) 21 26 35_4237f0d7](https://github.com/user-attachments/assets/d2d164fb-982c-4141-97c2-15910af21648)
+
 ## Overview
 
 SQL Guard is a Vite + React application that showcases secure and insecure authentication flows, log analysis, and defensive patterns for SQL security training. The project combines Supabase functions with a shadcn-ui based interface to highlight best practices.
