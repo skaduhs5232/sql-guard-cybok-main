@@ -1,31 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Shield, Code2, BookOpen, TrendingUp, Database, Lock } from "lucide-react";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, Shield, Code2, Database, Lock, Server } from "lucide-react";
+import { CodeBlock } from "@/components/ui/code-block";
 
 const SecurityAnalysis = () => {
-  const [realtimeStats, setRealtimeStats] = useState<any>(null);
 
-  useEffect(() => {
-    fetchRealtimeStats();
-  }, []);
-
-  const fetchRealtimeStats = async () => {
-    try {
-      const { data } = await supabase.functions.invoke('get-security-logs');
-      setRealtimeStats(data?.stats);
-    } catch (error) {
-      console.error('Error fetching realtime stats:', error);
-    }
-  };
   const vulnerabilities = [
     {
-      type: "SQL Injection",
+      type: "SQL Injection (SQLi)",
       severity: "Critical",
-      description: "Entrada não sanitizada permite execução de código SQL malicioso",
+      description: "Entrada não sanitizada permite execução de código SQL malicioso, podendo levar a extração total de dados.",
       impact: "Acesso não autorizado, perda de dados, comprometimento do sistema",
       owasp: "A03:2021 - Injection",
       cvss: "9.8/10.0",
@@ -34,7 +19,7 @@ const SecurityAnalysis = () => {
     {
       type: "Authentication Bypass",
       severity: "High", 
-      description: "Possível bypass de autenticação através de injeção SQL",
+      description: "Manipulação lógica da query de login para acessar contas sem senha válida.",
       impact: "Acesso administrativo não autorizado",
       owasp: "A07:2021 - Identification and Authentication Failures",
       cvss: "8.1/10.0",
@@ -43,7 +28,7 @@ const SecurityAnalysis = () => {
     {
       type: "Information Disclosure",
       severity: "Medium",
-      description: "Exposição de estrutura do banco e dados sensíveis",
+      description: "Mensagens de erro detalhadas que revelam estrutura do banco ou dados sensíveis.",
       impact: "Vazamento de informações confidenciais",
       owasp: "A01:2021 - Broken Access Control",
       cvss: "6.5/10.0", 
@@ -53,342 +38,273 @@ const SecurityAnalysis = () => {
 
   const mitigations = [
     {
-      technique: "Prepared Statements / Parameterized Queries",
-      description: "Separação completa entre código SQL e dados de entrada do usuário",
+      technique: "Prepared Statements",
+      description: "Separação completa entre código SQL e dados. O banco trata os inputs como dados literais, nunca como comandos.",
       effectiveness: "99%",
-      implementation: "Usar bibliotecas ORM ou drivers com suporte nativo a prepared statements",
+      implementation: "Usar bibliotecas ORM ou drivers com suporte nativo.",
       cybok_category: "Software Security",
-      code_example: "SELECT * FROM users WHERE username = ? AND password = ?"
+      code_example: "const query = 'SELECT * FROM users WHERE username = $1';"
     },
     {
-      technique: "Input Validation & Sanitization",
-      description: "Validação rigorosa e sanitização de todas as entradas do usuário",
+      technique: "Input Validation",
+      description: "Validação rigorosa (allow-list) de todas as entradas antes de processá-las.",
       effectiveness: "95%",
-      implementation: "Whitelist de caracteres permitidos, escape de caracteres especiais, validação de tipos",
+      implementation: "Regex para validar formatos, tipos e comprimentos.",
       cybok_category: "Software Security", 
-      code_example: "username.replace(/[^a-zA-Z0-9]/g, '').substring(0, 50)"
+      code_example: "if (!/^[a-zA-Z0-9]+$/.test(username)) throw new Error('Invalid input');"
     },
     {
-      technique: "Least Privilege Database Access", 
-      description: "Conta de banco com privilégios mínimos necessários para operação",
+      technique: "Least Privilege", 
+      description: "O usuário do banco deve ter apenas as permissões estritamente necessárias.",
       effectiveness: "85%",
-      implementation: "Criar usuário específico para aplicação com permissões limitadas (apenas SELECT, INSERT, UPDATE)",
+      implementation: "Criar usuários específicos para a aplicação (ex: sem DROP/ALTER).",
       cybok_category: "Access Control",
       code_example: "GRANT SELECT, INSERT, UPDATE ON app_tables TO app_user;"
-    },
-    {
-      technique: "Web Application Firewall (WAF)",
-      description: "Filtragem de requisições maliciosas antes de chegarem à aplicação",
-      effectiveness: "80%",
-      implementation: "Configurar regras para detectar padrões de SQL injection",
-      cybok_category: "Network Security",
-      code_example: "Regra: Bloquear requisições contendo: ', --, UNION, DROP"
-    },
-    {
-      technique: "Database Activity Monitoring",
-      description: "Monitoramento contínuo de atividades suspeitas no banco de dados",
-      effectiveness: "75%",
-      implementation: "Logs detalhados, alertas automáticos para queries anômalas",
-      cybok_category: "Security Monitoring",
-      code_example: "Log: ALERT - Multiple failed login attempts from IP"
-    },
-    {
-      technique: "Error Handling Seguro",
-      description: "Não exposição de detalhes técnicos em mensagens de erro",
-      effectiveness: "70%", 
-      implementation: "Mensagens genéricas para usuário, logs detalhados para desenvolvedores",
-      cybok_category: "Software Security",
-      code_example: "Usuário vê: 'Login inválido' | Log: 'SQL error: table users not found'"
     }
   ];
 
   const cybokPrinciples = [
     {
-      principle: "Defense in Depth (Defesa em Profundidade)",
-      description: "Múltiplas camadas independentes de segurança para proteção abrangente",
-      application: "Combinação de validação de entrada + prepared statements + WAF + monitoramento + controle de acesso",
-      cybok_domain: "Security Architecture & Design",
-      real_world_example: "Mesmo que um atacante bypasse a validação de entrada, prepared statements ainda o impedirão"
+      principle: "Defense in Depth",
+      description: "Múltiplas camadas independentes de segurança. Se uma falhar, outras protegem o sistema.",
+      application: "Validação + Prepared Statements + WAF + Monitoramento.",
+      cybok_domain: "Security Architecture",
+      icon: Shield
     },
     {
-      principle: "Principle of Least Privilege (Princípio do Menor Privilégio)",
-      description: "Concessão apenas dos privilégios mínimos necessários para funcionamento",
-      application: "Usuários de banco com permissões específicas, aplicação sem acesso admin desnecessário", 
-      cybok_domain: "Access Control & Privilege Management",
-      real_world_example: "App user só pode SELECT/INSERT/UPDATE em tabelas específicas, não pode DROP ou ALTER"
+      principle: "Least Privilege",
+      description: "Entidades devem operar com o mínimo de privilégios necessários para sua função.",
+      application: "Usuário do DB não pode ser 'root' ou 'sa'.", 
+      cybok_domain: "Access Control",
+      icon: Lock
     },
     {
-      principle: "Fail Secure (Falha Segura)",
-      description: "Sistema deve falhar de forma que mantenha a segurança, não a funcionalidade",
-      application: "Em caso de erro de validação ou conexão, negar acesso em vez de permitir bypass",
+      principle: "Fail Secure",
+      description: "Em caso de erro, o sistema deve falhar para um estado seguro (bloqueado), não aberto.",
+      application: "Erros de banco não devem expor stack traces.",
       cybok_domain: "Security Engineering",
-      real_world_example: "Se validação falha, retornar erro genérico e negar acesso, não processar query"
+      icon: AlertTriangle
     },
     {
-      principle: "Security by Design (Segurança por Design)",
-      description: "Segurança integrada desde o início do desenvolvimento, não como adição posterior", 
-      application: "Arquitetura que previne SQL injection por design, não depende apenas de correções",
-      cybok_domain: "Secure Development Lifecycle",
-      real_world_example: "ORM configurado para usar prepared statements por padrão em toda aplicação"
-    },
-    {
-      principle: "Monitoring & Incident Response (Monitoramento e Resposta)",
-      description: "Detecção proativa de ataques e resposta rápida a incidentes de segurança",
-      application: "Logs de tentativas de SQL injection, alertas automáticos, análise forense",
-      cybok_domain: "Security Operations & Incident Management", 
-      real_world_example: "Sistema detecta 5+ tentativas de injection do mesmo IP e bloqueia automaticamente"
+      principle: "Security by Design",
+      description: "Segurança integrada desde o início do ciclo de desenvolvimento.", 
+      application: "Escolha de frameworks seguros por padrão.",
+      cybok_domain: "Secure Development",
+      icon: Code2
     }
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Estatísticas em Tempo Real */}
-      {realtimeStats && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span>Estatísticas de Segurança em Tempo Real</span>
-            </CardTitle>
-            <CardDescription>
-              Dados coletados desta sessão de demonstração
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{realtimeStats.total_attempts}</div>
-                <div className="text-xs text-muted-foreground">Total de Tentativas</div>
-              </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{realtimeStats.sql_injection_attempts}</div>
-                <div className="text-xs text-muted-foreground">SQL Injections Detectadas</div>
-              </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{realtimeStats.successful_logins}</div>
-                <div className="text-xs text-muted-foreground">Logins Bem-sucedidos</div>
-              </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{realtimeStats.security_incidents}</div>
-                <div className="text-xs text-muted-foreground">Incidentes de Segurança</div>
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <Button variant="outline" size="sm" onClick={fetchRealtimeStats}>
-                Atualizar Estatísticas
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-2">
+          Análise de Vulnerabilidades
+        </h2>
+        <p className="text-muted-foreground text-lg">
+          Guia detalhado de vulnerabilidades, mitigações e princípios de segurança (CYBOK).
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-warning" />
-            <span>Análise de Vulnerabilidades (OWASP Top 10)</span>
-          </CardTitle>
-          <CardDescription>
-            Identificação e classificação detalhada de vulnerabilidades SQL injection
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Vulnerabilities */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-orange-500" />
+            <h3 className="text-xl font-semibold">Vulnerabilidades (OWASP)</h3>
+          </div>
+          
           <div className="space-y-4">
             {vulnerabilities.map((vuln, index) => (
-              <div key={index} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold">{vuln.type}</h4>
-                  <div className="flex space-x-2">
-                    <Badge variant={vuln.severity === "Critical" ? "destructive" : vuln.severity === "High" ? "default" : "secondary"}>
-                      {vuln.severity}
-                    </Badge>
-                    <Badge variant="outline">{vuln.cvss}</Badge>
+              <Card key={index} className="overflow-hidden border-l-4 border-l-red-500 shadow-sm hover:shadow-md transition-all">
+                <CardContent className="p-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200">{vuln.type}</h4>
+                    <Badge variant={vuln.severity === "Critical" ? "destructive" : "default"}>{vuln.severity}</Badge>
                   </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-2">{vuln.description}</p>
-                <p className="text-sm mb-2"><strong>Impacto:</strong> {vuln.impact}</p>
-                <p className="text-sm mb-2"><strong>OWASP:</strong> {vuln.owasp}</p>
-                <div className="text-sm">
-                  <strong>Exemplos de Payloads:</strong>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-1">
-                    {vuln.examples.map((example, idx) => (
-                      <code key={idx} className="bg-muted p-1 rounded text-xs block">{example}</code>
-                    ))}
+                  <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{vuln.description}</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-500">CVSS Score:</span>
+                      <span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{vuln.cvss}</span>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-900/10 p-2 rounded border border-red-100 dark:border-red-900/20">
+                      <p className="text-xs font-semibold text-red-700 dark:text-red-400 mb-1">Exemplos de Payload:</p>
+                      <div className="space-y-1">
+                        {vuln.examples.map((ex, i) => (
+                          <code key={i} className="block text-[10px] font-mono text-red-600 dark:text-red-300">{ex}</code>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Tabs defaultValue="mitigations" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="mitigations">Técnicas de Mitigação</TabsTrigger>
-          <TabsTrigger value="cybok">Princípios CYBOK</TabsTrigger>
-          <TabsTrigger value="implementation">Guia de Implementação</TabsTrigger>
-        </TabsList>
+        {/* Right Column: Tabs for Mitigations & Implementation */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="mitigations" className="w-full">
+            <TabsList className="w-full grid grid-cols-3 mb-6 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
+              <TabsTrigger value="mitigations" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Mitigações</TabsTrigger>
+              <TabsTrigger value="cybok" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">CYBOK</TabsTrigger>
+              <TabsTrigger value="implementation" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Implementação</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="mitigations">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-success" />
-                <span>Estratégias de Mitigação</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mitigations.map((mitigation, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold">{mitigation.technique}</h4>
-                      <div className="flex space-x-2">
-                        <Badge variant="outline" className="text-success border-success">
-                          {mitigation.effectiveness} efetivo
-                        </Badge>
-                        <Badge variant="secondary">{mitigation.cybok_category}</Badge>
+            <TabsContent value="mitigations" className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2">
+              {mitigations.map((mitigation, index) => (
+                <Card key={index} className="border-none shadow-md bg-white dark:bg-slate-900">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-green-500" />
+                        {mitigation.technique}
+                      </CardTitle>
+                      <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20">
+                        {mitigation.effectiveness} Eficácia
+                      </Badge>
+                    </div>
+                    <CardDescription>{mitigation.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-sm">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">Como implementar: </span>
+                        <span className="text-muted-foreground">{mitigation.implementation}</span>
                       </div>
+                      <CodeBlock code={mitigation.code_example} language="javascript" title="Exemplo Prático" />
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">{mitigation.description}</p>
-                    <p className="text-sm mb-2"><strong>Implementação:</strong> {mitigation.implementation}</p>
-                    <div className="bg-muted p-2 rounded mt-2">
-                      <p className="text-xs font-medium mb-1">Exemplo de Código:</p>
-                      <code className="text-xs">{mitigation.code_example}</code>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
 
-        <TabsContent value="cybok">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <span>Princípios CYBOK Aplicados</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <TabsContent value="cybok" className="animate-in fade-in-50 slide-in-from-bottom-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cybokPrinciples.map((principle, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-primary">{principle.principle}</h4>
-                      <Badge variant="outline">{principle.cybok_domain}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">{principle.description}</p>
-                    <p className="text-sm mb-2"><strong>Aplicação na Prática:</strong> {principle.application}</p>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded mt-2">
-                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">Exemplo Real:</p>
-                      <p className="text-xs text-blue-700 dark:text-blue-300">{principle.real_world_example}</p>
-                    </div>
-                  </div>
+                  <Card key={index} className="hover:border-blue-400 transition-colors cursor-default group">
+                    <CardHeader>
+                      <div className="mb-2 p-2 w-fit rounded-lg bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 transition-colors">
+                        <principle.icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <CardTitle className="text-lg">{principle.principle}</CardTitle>
+                      <CardDescription className="text-xs uppercase tracking-wider font-semibold text-blue-500">
+                        {principle.cybok_domain}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">{principle.description}</p>
+                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <p className="text-xs font-medium text-slate-900 dark:text-slate-200 mb-1">Aplicação:</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{principle.application}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="implementation">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Database className="h-5 w-5 text-blue-500" />
-                <span>Guia de Implementação Segura</span>
-              </CardTitle>
-              <CardDescription>
-                Passos práticos para implementar proteções contra SQL injection
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Checklist de Implementação */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center">
-                    <Lock className="h-4 w-4 mr-2" />
-                    Checklist de Segurança
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      "✅ Usar prepared statements em 100% das queries",
-                      "✅ Validar todos os inputs do usuário",
-                      "✅ Implementar lista de caracteres permitidos",
-                      "✅ Configurar usuário de banco com privilégios mínimos",
-                      "✅ Implementar logs de auditoria detalhados",
-                      "✅ Configurar alertas para tentativas de injection",
-                      "✅ Realizar testes de penetração regulares",
-                      "✅ Manter bibliotecas e frameworks atualizados"
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start space-x-2 p-2 bg-green-50 dark:bg-green-900/20 rounded">
-                        <span className="text-sm">{item}</span>
-                      </div>
-                    ))}
+            <TabsContent value="implementation" className="animate-in fade-in-50 slide-in-from-bottom-2">
+              <Card className="border-none shadow-none bg-transparent">
+                <CardContent className="p-0 space-y-6">
+                  
+                  <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Server className="h-5 w-5 text-indigo-500" />
+                      Configuração Segura (Node.js + Postgres)
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Exemplo completo de como configurar uma rota de login segura utilizando as melhores práticas de mercado.
+                    </p>
+                    <CodeBlock 
+                      title="secure-login-implementation.js"
+                      showLineNumbers={true}
+                      code={`// 1. Importar dependências
+const bcrypt = require('bcrypt');
+const { Pool } = require('pg');
+
+// 2. Configurar Pool com variáveis de ambiente
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: 5432,
+});
+
+// 3. Rota de Login Segura
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  // ✅ Validação de Input (Fail Fast)
+  if (!username || !password || username.length > 50) {
+    return res.status(400).json({ error: 'Dados inválidos' });
+  }
+
+  try {
+    // ✅ Prepared Statement (Evita SQL Injection)
+    const query = 'SELECT id, password_hash FROM users WHERE username = $1';
+    const { rows } = await pool.query(query, [username]);
+
+    if (rows.length === 0) {
+      // ✅ Mensagem Genérica (Evita Enumeration)
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    // ✅ Comparação Segura de Hash
+    const validPassword = await bcrypt.compare(password, rows[0].password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    // Login bem sucedido...
+    res.json({ token: generateToken(rows[0].id) });
+
+  } catch (err) {
+    // ✅ Log Seguro (Não expor erro ao cliente)
+    console.error('Login error:', err.message);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});`} 
+                    />
                   </div>
-                </div>
 
-                {/* Exemplo de Código Seguro */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center">
-                    <Code2 className="h-4 w-4 mr-2" />
-                    Exemplo de Implementação (Node.js + PostgreSQL)
-                  </h4>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <pre className="text-xs overflow-x-auto">
-{`// ❌ VULNERÁVEL - Construção de query com concatenação
-const vulnerableQuery = \`SELECT * FROM users 
-WHERE username = '\${username}' AND password = '\${password}'\`;
+                  <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Database className="h-5 w-5 text-blue-500" />
+                      Hardening do Banco de Dados
+                    </h3>
+                    <CodeBlock 
+                      title="database-hardening.sql"
+                      language="sql"
+                      code={`-- 1. Criar usuário de aplicação com privilégios mínimos
+CREATE USER app_user WITH PASSWORD 'StrongPass123!';
 
-// ✅ SEGURO - Prepared statement com parâmetros
-const secureQuery = 'SELECT * FROM users WHERE username = $1 AND password = $2';
-const result = await client.query(secureQuery, [username, hashedPassword]);
+-- 2. Conceder apenas permissões DML necessárias
+GRANT CONNECT ON DATABASE myapp TO app_user;
+GRANT SELECT, INSERT, UPDATE ON TABLE users TO app_user;
+GRANT SELECT, INSERT ON TABLE audit_logs TO app_user;
 
-// ✅ SEGURO - Validação de entrada
-function validateInput(input) {
-  // Remover caracteres perigosos
-  const sanitized = input.replace(/[^a-zA-Z0-9@._-]/g, '');
-  // Limitar tamanho
-  return sanitized.substring(0, 50);
-}
-
-// ✅ SEGURO - Hash da senha antes de comparar
-const hashedPassword = await bcrypt.hash(password, 10);`}
-                    </pre>
-                  </div>
-                </div>
-
-                {/* Configurações de Banco */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center">
-                    <Database className="h-4 w-4 mr-2" />
-                    Configurações de Banco Seguras
-                  </h4>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <pre className="text-xs overflow-x-auto">
-{`-- Criar usuário com privilégios mínimos
-CREATE USER app_user WITH PASSWORD 'secure_password';
-
--- Conceder apenas permissões necessárias
-GRANT SELECT, INSERT, UPDATE ON users TO app_user;
-GRANT SELECT, INSERT ON audit_logs TO app_user;
-
--- Revogar permissões perigosas
+-- 3. Bloquear acesso a tabelas de sistema
 REVOKE ALL ON SCHEMA information_schema FROM app_user;
 REVOKE ALL ON SCHEMA pg_catalog FROM app_user;
 
--- Habilitar logs de auditoria
-ALTER SYSTEM SET log_statement = 'all';
-ALTER SYSTEM SET log_min_duration_statement = 100;`}
-                    </pre>
+-- 4. (Opcional) Criar view para limitar colunas expostas
+CREATE VIEW public_users AS 
+  SELECT id, username, created_at FROM users;
+GRANT SELECT ON public_users TO app_user;`} 
+                    />
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };

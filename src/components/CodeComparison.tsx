@@ -1,6 +1,41 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Shield, Code } from "lucide-react";
+import { AlertTriangle, Shield, Code, Terminal, Copy, Check } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
+const CodeBlock = ({ code, language = "javascript", title }: { code: string, language?: string, title?: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 shadow-xl">
+      <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 border-b border-zinc-800">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+          </div>
+          {title && <span className="ml-2 text-xs text-zinc-400 font-mono">{title}</span>}
+        </div>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-400 hover:text-zinc-100" onClick={copyToClipboard}>
+          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+        </Button>
+      </div>
+      <div className="p-4 overflow-x-auto">
+        <pre className="text-sm font-mono text-zinc-300 leading-relaxed">
+          <code>{code}</code>
+        </pre>
+      </div>
+    </div>
+  );
+};
 
 const CodeComparison = () => {
   const vulnerableCode = `// CÓDIGO VULNERÁVEL - NÃO USE EM PRODUÇÃO
@@ -123,70 +158,103 @@ const logSecurityEvent = (event, details) => {
 };`;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Code className="h-5 w-5" />
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <Card className="border-none shadow-none bg-transparent">
+        <CardHeader className="px-0">
+          <CardTitle className="flex items-center space-x-2 text-2xl">
+            <Code className="h-6 w-6 text-primary" />
             <span>Comparação de Código</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base">
             Análise detalhada entre implementações vulneráveis e seguras
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <Tabs defaultValue="vulnerable" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="vulnerable" className="flex items-center space-x-2">
+            <TabsList className="grid w-full grid-cols-3 mb-6 h-auto p-1 bg-muted/50 rounded-xl">
+              <TabsTrigger value="vulnerable" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-background data-[state=active]:text-destructive data-[state=active]:shadow-sm transition-all">
                 <AlertTriangle className="h-4 w-4" />
                 <span>Vulnerável</span>
               </TabsTrigger>
-              <TabsTrigger value="secure" className="flex items-center space-x-2">
+              <TabsTrigger value="secure" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-background data-[state=active]:text-success data-[state=active]:shadow-sm transition-all">
                 <Shield className="h-4 w-4" />
                 <span>Seguro</span>
               </TabsTrigger>
-              <TabsTrigger value="mitigations">Mitigações Extras</TabsTrigger>
+              <TabsTrigger value="mitigations" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
+                <Terminal className="h-4 w-4" />
+                <span>Mitigações Extras</span>
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="vulnerable">
-              <div className="border border-danger/20 rounded-lg p-4 bg-danger/5">
-                <div className="flex items-center space-x-2 mb-4">
-                  <AlertTriangle className="h-5 w-5 text-danger" />
-                  <h3 className="font-semibold text-danger">Código Vulnerável</h3>
+            <TabsContent value="vulnerable" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-destructive text-lg">Código Vulnerável</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Exemplo de implementação insegura comum em aplicações legadas
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-background rounded-md p-4 overflow-x-auto">
-                  <pre className="text-sm">
-                    <code>{vulnerableCode}</code>
-                  </pre>
+                
+                <div className="mb-6 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    <strong>Onde está o erro:</strong> Observe como as variáveis <code>username</code> e <code>password</code> são concatenadas diretamente na string da query. Isso permite que um atacante manipule a estrutura lógica do SQL inserindo caracteres especiais como aspas simples (').
+                  </p>
                 </div>
+
+                <CodeBlock code={vulnerableCode} title="vulnerable-auth.js" />
               </div>
             </TabsContent>
 
-            <TabsContent value="secure">
-              <div className="border border-success/20 rounded-lg p-4 bg-success/5">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Shield className="h-5 w-5 text-success" />
-                  <h3 className="font-semibold text-success">Código Seguro</h3>
+            <TabsContent value="secure" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+              <div className="rounded-xl border border-success/20 bg-success/5 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-success/10">
+                    <Shield className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-success text-lg">Código Seguro</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Implementação recomendada seguindo as melhores práticas
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-background rounded-md p-4 overflow-x-auto">
-                  <pre className="text-sm">
-                    <code>{secureCode}</code>
-                  </pre>
+
+                <div className="mb-6 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    <strong>A Correção:</strong> O uso de <code>?</code> (placeholders) garante que o banco de dados trate os inputs estritamente como dados, nunca como comandos executáveis. Além disso, senhas são comparadas usando hash (bcrypt) e nunca em texto plano.
+                  </p>
                 </div>
+
+                <CodeBlock code={secureCode} title="secure-auth.js" />
               </div>
             </TabsContent>
 
-            <TabsContent value="mitigations">
-              <div className="border border-primary/20 rounded-lg p-4 bg-primary/5">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-primary">Mitigações Adicionais</h3>
+            <TabsContent value="mitigations" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Shield className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary text-lg">Mitigações Adicionais</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Camadas extras de segurança para defesa em profundidade
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-background rounded-md p-4 overflow-x-auto">
-                  <pre className="text-sm">
-                    <code>{additionalMitigations}</code>
-                  </pre>
+
+                <div className="mb-6 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    <strong>Defesa em Profundidade:</strong> Não confie em apenas uma camada de segurança. Valide inputs, limite privilégios do banco de dados e monitore atividades suspeitas.
+                  </p>
                 </div>
+
+                <CodeBlock code={additionalMitigations} title="security-layers.js" />
               </div>
             </TabsContent>
           </Tabs>

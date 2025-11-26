@@ -94,80 +94,97 @@ const SecurityLogs = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header com estatísticas */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-2xl font-bold">Logs de Segurança em Tempo Real</h3>
-          <p className="text-muted-foreground">
-            Monitoramento de tentativas de login e atividades suspeitas
-          </p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-950 via-indigo-950 to-slate-950 p-8 text-white shadow-2xl border border-blue-900/50">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"></div>
+        
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-500/20 rounded-lg backdrop-blur-sm border border-blue-400/20">
+                <Activity className="h-6 w-6 text-blue-300" />
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
+                Dashboard de Monitoramento
+              </h2>
+            </div>
+            <p className="text-blue-200/80 max-w-2xl text-lg leading-relaxed">
+              Monitoramento em tempo real de tentativas de login, detecção de SQL Injection e análise de tráfego suspeito.
+            </p>
+          </div>
+          <Button 
+            onClick={fetchSecurityLogs} 
+            disabled={loading}
+            variant="outline"
+            className="bg-blue-500/10 border-blue-400/30 text-blue-200 hover:bg-blue-500/20 hover:text-white"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
         </div>
-        <Button onClick={fetchSecurityLogs} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
       </div>
 
       {/* Cards de estatísticas */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Activity className="h-4 w-4 text-blue-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Total de Tentativas</p>
-                  <p className="text-lg font-bold">{stats.total_attempts}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Total</Badge>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{stats.total_attempts}</h3>
+                <p className="text-sm text-muted-foreground">Tentativas Totais</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">SQL Injections</p>
-                  <p className="text-lg font-bold text-red-500">{stats.sql_injection_attempts}</p>
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/10 border-red-200 dark:border-red-900/50 shadow-sm hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Crítico</Badge>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl font-bold text-red-700 dark:text-red-400">{stats.sql_injection_attempts}</h3>
+                <p className="text-sm text-red-600/80 dark:text-red-400/70">Injeções Detectadas</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Server className="h-4 w-4 text-orange-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Endpoint Vulnerável</p>
-                  <p className="text-lg font-bold text-orange-500">{stats.vulnerable_endpoint_attempts}</p>
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/10 border-green-200 dark:border-green-900/50 shadow-sm hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Shield className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Sucesso</Badge>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl font-bold text-green-700 dark:text-green-400">{stats.successful_logins}</h3>
+                <p className="text-sm text-green-600/80 dark:text-green-400/70">Logins Legítimos</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-green-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Logins Bem-sucedidos</p>
-                  <p className="text-lg font-bold text-green-500">{stats.successful_logins}</p>
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/10 border-purple-200 dark:border-purple-900/50 shadow-sm hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <Eye className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Monitor</Badge>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Eye className="h-4 w-4 text-purple-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Incidentes Críticos</p>
-                  <p className="text-lg font-bold text-purple-500">{stats.security_incidents}</p>
-                </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl font-bold text-purple-700 dark:text-purple-400">{stats.security_incidents}</h3>
+                <p className="text-sm text-purple-600/80 dark:text-purple-400/70">Incidentes Registrados</p>
               </div>
             </CardContent>
           </Card>
